@@ -2,7 +2,6 @@
 
 Conditional VAEs that generate realistic **daily hourly PV profiles**, with a clear-sky physical envelope built directly into the decoder, so generated power is zero at night and can never exceed the physical limit. Built and evaluated end to end in Google Colab.
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/<your-username>/<your-repo>/blob/main/notebooks/01_data_clearsky_baseline.ipynb)
 
 > **Scope in one line:** one site, one fixed-tilt 1 kWp PV system, daily 24-hour profiles. The model is *physics-constrained* (hard output limit from `pvlib`), not a PINN: it does not solve differential equations.
 
@@ -161,4 +160,4 @@ Man-W-Salwa Qazi
 
 ## License
 
-The code in this repository is released under the MIT License. See LICENSE for details.# physics-constrained-synthetic-solar-pv
+The code in this repository is released under the MIT License. See LICENSE for details.
