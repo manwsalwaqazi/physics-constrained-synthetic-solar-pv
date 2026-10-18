@@ -82,7 +82,7 @@ A sharper likelihood improves moderate ramps (90th percentile reaches 0.210 vs 0
 
 **Data.** Hourly PV output of a 1 kWp fixed-tilt system and ambient temperature from [PVGIS](https://joint-research-centre.ec.europa.eu/pvgis_en) (via `pvlib.iotools.get_pvgis_hourly`), 2005 to 2020. Timestamps are shifted to local solar time so each "day" is one sun cycle. The last 2 years (731 days) are held out for testing; 5,113 days are used for training.
 
-**Site.** [FILL IN: place name] ([FILL IN: latitude], [FILL IN: longitude]), fixed tilt [FILL IN]° facing [FILL IN: direction]; PVGIS radiation database: [FILL IN: e.g. PVGIS-SARAH2 or PVGIS-ERA5].
+**Site.** Seville, Spain (37.39° N, 5.98° W), fixed tilt 30° facing south; PVGIS radiation database: PVGIS default satellite-based database for the site (PVGIS-SARAH family).
 
 **Physical envelope.** Clear-sky plane-of-array irradiance from `pvlib` (Ineichen model), scaled to PV watts with a constant `K` fitted on training data (99.5th percentile of output / clear-sky irradiance). The envelope is deterministic physics, not learned.
 
@@ -171,4 +171,4 @@ Man-W-Salwa Qazi
 
 ## License
 
-The code in this repository is released under the MIT License. See LICENSE for details. PVGIS data are provided by the European Commission's Joint Research Centre; check their terms before redistributing raw data.
+The code in this repository is released under the MIT License. See [LICENSE] for details. PVGIS data are provided by the European Commission's Joint Research Centre; check their terms before redistributing raw data.
