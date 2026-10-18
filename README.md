@@ -1,7 +1,8 @@
 # Physics-Constrained Synthetic Solar PV Generation
 
-Conditional VAEs that generate realistic **daily hourly PV profiles**, with a clear-sky physical envelope built directly into the decoder, so generated power is zero at night and can never exceed the physical limit. Built and evaluated end to end in Google Colab.
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/manwsalwaqazi/physics-constrained-synthetic-solar-pv/blob/main/01_data_clearsky_baseline.ipynb)
 
+Conditional VAEs that generate realistic **daily hourly PV profiles**, with a clear-sky physical envelope built directly into the decoder, so generated power is zero at night and can never exceed the physical limit. Built and evaluated end to end in Google Colab.
 
 > **Scope in one line:** one site, one fixed-tilt 1 kWp PV system, daily 24-hour profiles. The model is *physics-constrained* (hard output limit from `pvlib`), not a PINN: it does not solve differential equations.
 
@@ -15,9 +16,11 @@ Synthetic energy data is useful when real data is scarce, private, or expensive 
 
 All numbers are on held-out real days (last 2 years of data). "Seeds" means 3 independently trained models.
 
+![Real vs synthetic example days](real_vs_synthetic.png)
+
 | Question | Result |
 |---|---|
-| Does the unconstrained decoder respect physics? | **No.** It broke a physical limit on 100% of days. |
+| Does the unconstrained decoder respect physics? | **No.** It broke a physical limit on 100% of days under the strict rule, most likely from small night-time and negative values. Simple clipping reduces this to 0.4%, which is why the comparison below is the meaningful one. |
 | Does the in-decoder envelope fix that? | **Yes**, 0% hard violations by construction. |
 | Is it better than just clipping afterwards? | **Yes, modestly and consistently.** Wasserstein distance to real data **0.0022 ± 0.0002** (envelope) vs **0.0030 ± 0.0006** (unconstrained + clipping): about 27% lower, better in all 3 seeds. |
 | Does it memorize? | **No.** Novelty about 0.08 vs 0.092 for real held-out days (bootstrap baseline: 0). |
@@ -77,7 +80,9 @@ A sharper likelihood improves moderate ramps (90th percentile reaches 0.210 vs 0
 
 ## Method
 
-**Data.** Hourly PV output of a 1 kWp fixed-tilt system and ambient temperature from [PVGIS](https://joint-research-centre.ec.europa.eu/pvgis_en) (via `pvlib.iotools.get_pvgis_hourly`), 2005 to 2020. Timestamps are shifted to local solar time so each "day" is one sun cycle. The last 2 years (731 days) are held out for testing; 5,113 days are used for training. *(Adjust these figures if you change the site or years in Notebook 1.)*
+**Data.** Hourly PV output of a 1 kWp fixed-tilt system and ambient temperature from [PVGIS](https://joint-research-centre.ec.europa.eu/pvgis_en) (via `pvlib.iotools.get_pvgis_hourly`), 2005 to 2020. Timestamps are shifted to local solar time so each "day" is one sun cycle. The last 2 years (731 days) are held out for testing; 5,113 days are used for training.
+
+**Site.** [FILL IN: place name] ([FILL IN: latitude], [FILL IN: longitude]), fixed tilt [FILL IN]° facing [FILL IN: direction]; PVGIS radiation database: [FILL IN: e.g. PVGIS-SARAH2 or PVGIS-ERA5].
 
 **Physical envelope.** Clear-sky plane-of-array irradiance from `pvlib` (Ineichen model), scaled to PV watts with a constant `K` fitted on training data (99.5th percentile of output / clear-sky irradiance). The envelope is deterministic physics, not learned.
 
@@ -118,23 +123,24 @@ A sharper likelihood improves moderate ramps (90th percentile reaches 0.210 vs 0
 ## Repository layout
 
 ```
-notebooks/
-  01_data_clearsky_baseline.ipynb   data, clear-sky envelope, metrics, bootstrap baseline
-  02_cvae_variants.ipynb            metric sanity checks, A/B/C variants x 3 seeds
-  03_tstr_efficiency_cv.ipynb       TSTR, decoder-width sweep, conditioning check
-figures/                            real-vs-synthetic plots
-results/                            results_nb2.csv and summary tables
+01_data_clearsky_baseline.ipynb   data, clear-sky envelope, metrics, bootstrap baseline
+02_cvae_variants.ipynb            metric sanity checks, A/B/C variants x 3 seeds
+03_tstr_efficiency.ipynb          TSTR, decoder-width sweep, conditioning check
+real_vs_synthetic.png             real vs synthetic example days
+results_nb2.csv                   per-seed metrics from Notebook 2
+requirements.txt                  Python dependencies
+LICENSE                           MIT
 ```
 
-Run the notebooks in order. Notebook 1 writes `solar_data.pkl`, Notebook 2 writes `results_nb2.csv`, `cvae_models.pt` and `synthetic_test_conditions.npz`, and Notebook 3 reads them.
+Run the notebooks in order, in the same Colab session (or mount Google Drive to keep files between sessions). Notebook 1 writes `solar_data.pkl`, Notebook 2 writes `results_nb2.csv`, `cvae_models.pt` and `synthetic_test_conditions.npz`, and Notebook 3 reads them.
 
 ## Reproducing
 
-1. Open Notebook 1 in Colab and set the site (`LAT, LON`), panel tilt and years in the config cell. Any site covered by PVGIS works. If the download fails, set `RASTER_DB = "PVGIS-ERA5"`.
+1. Open Notebook 1 in Colab (badge above) and set the site (`LAT, LON`), panel tilt and years in the config cell. Any site covered by PVGIS works. If the download fails, set `RASTER_DB = "PVGIS-ERA5"`.
 2. Run all cells. Notebooks 2 and 3 are fastest on a GPU runtime but also run on CPU.
 3. Seeds are fixed (0, 1, 2) for the CVAE variants.
 
-Dependencies: `pvlib`, `torch`, `numpy`, `pandas`, `scipy`, `scikit-learn`, `matplotlib`.
+Dependencies are listed in `requirements.txt` (`pvlib`, `torch`, `numpy`, `pandas`, `scipy`, `scikit-learn`, `matplotlib`).
 
 ## Limitations
 
@@ -154,10 +160,15 @@ Dependencies: `pvlib`, `torch`, `numpy`, `pandas`, `scipy`, `scikit-learn`, `mat
 - Fully unconditional evaluation using clearness indices sampled from the training distribution.
 - Physics-informed terms beyond the envelope, such as energy balance and temperature-dependent derating.
 
+## References
+
+- Holmgren, W. F., Hansen, C. W., & Mikofski, M. A. (2018). pvlib python: a python package for modeling solar energy systems. *Journal of Open Source Software*, 3(29), 884.
+- Huld, T., Müller, R., & Gambardella, A. (2012). A new solar radiation database for estimating PV performance in Europe and Africa. *Solar Energy*, 86(6), 1803–1815.
+
 ## Author
 
 Man-W-Salwa Qazi
 
 ## License
 
-The code in this repository is released under the MIT License. See LICENSE for details.
+The code in this repository is released under the MIT License. See LICENSE for details. PVGIS data are provided by the European Commission's Joint Research Centre; check their terms before redistributing raw data.
